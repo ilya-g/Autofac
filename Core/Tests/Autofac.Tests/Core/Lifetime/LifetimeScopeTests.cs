@@ -163,6 +163,24 @@ namespace Autofac.Tests.Core.Lifetime
             Assert.IsTrue(tracker.IsDisposed, "The tracker should have been disposed along with the lifetime scope chain.");
         }
 
+
+        [Test]
+        [Ignore("Issue #608")]
+        public void NestedLifetimeScope_ReflectsParentScopeUpdates()
+        {
+            var container = new ContainerBuilder().Build();
+            var nested = container.BeginLifetimeScope(_ => { }); // to create child registry
+            Assert.That(nested.Resolve<IEnumerable<string>>(), Is.Empty); // required to initialize service info
+
+            var builder = new ContainerBuilder();
+            builder.RegisterInstance("s1");
+            builder.Update(container);
+
+            Assert.That(container.Resolve<string>(), Is.EqualTo("s1"));
+            Assert.That(nested.Resolve<string>(), Is.EqualTo("s1"), "Nested scope should get update from the parent scope");
+        }
+
+
         public class Person
         {
         }
